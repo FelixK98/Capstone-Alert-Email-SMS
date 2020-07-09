@@ -1,32 +1,43 @@
 import urllib.request
 import xml.etree.ElementTree as ET
+import time
+from urllib.parse import quote
+while True:
+    data = urllib.request.urlopen('http://127.0.0.1:9501/api?action=getmessagelist&username=admin&password=123456&listName=inbox').read()
+    modified_data = '<Content>' + data.decode() + '</Content>'
 
-# data = urllib.request.urlopen('http://127.0.0.1:9501/api?action=receivemessage&username=admin&password=123456&folder=inbox&limit=5&afterdownload=delete').read()
-sample_data = '''
-<response>
-<Envelope>
-          <ID>93e36b10-1fce-4648-a059-dbf67ddb66a6</ID>
-          <Type>SMS:TEXT</Type>
-          <Sender>admin</Sender>
-          <Receiver>+3600000000</Receiver>
-          <Message>Test000000</Message>
-          <SentTime>2010-03-01 16:02:06</SentTime>
-          <ReceivedTime>2010-03-01 16:02:06</ReceivedTime>
-</Envelope>
-<Envelope>
-          <ID>85fbb591-c7d2-446c-842d-543984da7ad9</ID>
-          <Type>SMS:TEXT</Type>
-          <Sender>admin</Sender>
-          <Receiver>+3600000002</Receiver>
-          <Message>Test000002</Message>
-          <SentTime>2010-03-01 16:02:06</SentTime>
-          <ReceivedTime>2010-03-01 16:02:06</ReceivedTime>
-</Envelope>
-</response>
-'''
+    tree = ET.fromstring(modified_data)
 
-tree = ET.fromstring(sample_data)
+    userList = tree.findall('Envelope')
+    for item in userList:
+        if 'BLOCK' in item.find('Message').text.upper():
+            # get ip to block
+            ip = item.find('Message').text.upper().split()[1]
+            # call server to block ip
+            urllib.request.urlopen('http://192.168.10.10:7000/add/' + ip)
 
-userList = tree.findall('Envelope')
-for item in userList:
-    print(item.find('Message').text)
+            # Reply after block
+            sms_host = "http://127.0.0.1"
+            user_name = "admin"
+            user_password = "123456"
+            recipient = "+84375697417"
+            message_body = 'BLOCK SUCCESSFULLY'
+            http_req = sms_host
+            http_req += ":9501/api?action=sendmessage&username="
+            http_req += quote(user_name)
+            http_req += "&password="
+            http_req += quote(user_password)
+            http_req += "&recipient="
+            http_req += quote(recipient)
+
+            http_req += "&messagetype=SMS:TEXT&messagedata="
+
+            http_req += quote(message_body)
+
+            get = urllib.request.urlopen(http_req)
+            get.close()
+        # delete message after read
+        delete_result = urllib.request.urlopen('http://127.0.0.1:9501/api?action=deletemessagebyid&username=admin&password=123456&msgID=' + item.find('ID').text)
+        print(delete_result.read().decode())
+    time.sleep(1)
+
