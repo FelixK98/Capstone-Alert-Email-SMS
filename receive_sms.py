@@ -7,12 +7,13 @@ while True:
     #retrieve msg list
     data = Ozekin_api.receive_sms()
     modified_data = '<Content>' + data.decode() + '</Content>'
-    print(modified_data)
+
     tree = ET.fromstring(modified_data)
 
     userList = tree.findall('Envelope')
     for item in userList:
-        if 'BLOCK' in item.find('Message').text.upper():
+        print(item.find('Sender').text)
+        if 'BLOCK' in item.find('Message').text.upper() and  item.find('Sender').text == '+84375697417':
             # get ip to block
             ip = item.find('Message').text.upper().split()[1]
             # call server to block ip
@@ -23,5 +24,5 @@ while True:
         # delete message after read
         delete_result = Ozekin_api.delete_sms_by_id(item.find('ID').text)
         print(delete_result.read().decode())
-    time.sleep(1)
+    time.sleep(2)
 
