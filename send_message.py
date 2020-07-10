@@ -4,8 +4,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import urllib.request
-from urllib.parse import quote
 
+import Ozekin_api
 msg = MIMEMultipart('alternative')
 sender = 'suricata.alert@gmail.com'
 receiver = 'khoavmse63048@fpt.edu.vn'
@@ -54,42 +54,13 @@ and event.timestamp between DATE_SUB(now(), INTERVAL 9 second) and now()''')
             server.quit()
 
         # ----------SEND SMS------------------
-
-        sms_host = "http://127.0.0.1"
-
-        user_name = "admin"
-
-        user_password = "123456"
-
-        recipient = "+84375697417"
-
         message_body = '''
         DATE: {}
         DETECT: {}        
         IP SOURCE: {}
         IP DESTINATION: {}
         '''.format(*alert)
+        Ozekin_api.send_sms(message_body)
 
-        http_req = sms_host
-
-        http_req += ":9501/api?action=sendmessage&username="
-
-        http_req += quote(user_name)
-
-        http_req += "&password="
-
-        http_req += quote(user_password)
-
-        http_req += "&recipient="
-
-        http_req += quote(recipient)
-
-        http_req += "&messagetype=SMS:TEXT&messagedata="
-
-        http_req += quote(message_body)
-
-        get = urllib.request.urlopen(http_req)
-
-        get.close()
 
     time.sleep(7)
